@@ -1,0 +1,271 @@
+• Guia Definitiva django
+
+#################### Reordatorios #################
+- Ver la lista de los entornos virtuales creados
+-- conda info --envs
+-- activar el entorno virtual source activate nombreDelEntorno
+-- desativar el entorno source desactivate
+- ver la version de django para ver si esta instalado
+--python -m django --version
+###################################################
+
+################### Pasos #########################
+
+1 - Bajar miniconda https://conda.io/en/latest/miniconda.html
+2 - se crea un entorno virtual 
+  - conda create -n nombreDelEntorno python=3.7 (abrir el cmd como administrador en wd)
+3 - se activa el entorno virtual
+  - source activate nombreDelEntorno
+  Nota: una cosa es el entorno gloval y otra cosa es el virtual
+  con pip list aparece un listado del virtual o del global el global tiene mas cosas
+4 - se instala django en el entorno virtual
+  - pip install django
+5 - Se crea un proyecto
+  - django-admin startproject nombreDelProyecto
+6 - se instala git
+7 - se abre el visual studoo code y pedira instalar el pilint, se instala
+8 - se corre la aplicacion para ver si se instalo bien 
+  - python manage.py runserver
+###################################################
+Con estos pasos se hace una instalacion limpia de django
+###################################################
+############ configuracion del backend ############
+1 - se crea un app dentro del proyecto-entorno virtual
+  -- python manage.py startapp core
+  - se crean las direcciones
+  -- dentro de la carpeta core buscar el archivo views.py
+  y se aguegan las direccion, el archivo queda asi
+
+from django.shortcuts import render, HttpResponse
+
+# Create your views here.
+
+def home(request):
+    return HttpResponse("Inicio")
+
+def about(request):
+    return HttpResponse("about")
+
+def services(request):
+    return HttpResponse("services")
+
+def sample(request):
+    return HttpResponse("sample")
+
+def store(request):
+    return HttpResponse("store")
+
+def contact(request):
+    return HttpResponse("contact")
+
+def blog(request):
+    return HttpResponse("blog")
+
+  -- dentro de la carpeta del proyecto principal buscar el archivo urls.py
+     colocar from core import views debajo de los from's..
+     se crean las urls dentro de urlpatterns queda el archivo asi
+
+    urlpatterns = [
+    # path del core
+    path('', views.home, name="home"),
+    path('about/', views.about, name="about"),
+    path('services/', views.services, name="services"),
+    path('sample/', views.sample, name="sample"),
+    path('store/', views.store, name="store"),
+    path('contact/', views.contact, name="contact"),
+    path('blog/', views.blog, name="blog"),
+    # path del admin
+    path('admin/', admin.site.urls),
+]
+
+ - ahora se organizan las urls para cada app, se crea un archivo urls.py en la app que se desea organizar
+el archivo queda asi 
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # path del core
+    path('', views.home, name="home"),
+    path('about/', views.about, name="about"),
+    path('services/', views.services, name="services"),
+    path('sample/', views.sample, name="sample"),
+    path('store/', views.store, name="store"),
+    path('contact/', views.contact, name="contact"),
+    path('blog/', views.blog, name="blog"),
+]
+
+ - tambien se debe de configurar el urls.py global, quedaria asi 
+
+from django.contrib import admin
+from django.urls import path, include ## include se coloca para poder importar las urls del app core
+
+urlpatterns = [
+    # path del core
+    path('', include('core.urls')),## con esto se importa las url del app llamado core 
+    # path del admin
+    path('admin/', admin.site.urls),
+]
+
+ - se crea una carpeta templates dentro de la carpeta core o app core y dentro
+de la carpera templates se crea una carpeta llamada core -> templates/core
+ - se crea una carpeta dentro de la carpeta core llamada static parlos ficheros estaticos
+y dentro de static otra llamada core -> static/core
+Nota: esa es la logica que se debe de seguir tanto para templates como para ficheros staticos
+
+- luego se colocan los ficheros en templates/core ylos ficheros estaticos en templates/core
+Nota: en este punto se deben de renderizar las direcciones para que puedan cargar los templates
+para ellos hay q ir a settings.py en la carpeta global y a;adir el app core dentro de INSTALLED_APPS
+se agrega el app 'core', ya con esto podemos modificar las vistas para que se puedan renderizar 
+ya modificado el archivo core/views.py quedaria de la sig forma
+
+from django.shortcuts import render, HttpResponse
+
+# Create your views here.
+
+def home(request):
+    return render(request, "core/index.html")
+
+def about(request):
+    return render(request,"core/about.html")
+
+def services(request):
+    return render(request,"core/services.html")
+
+def sample(request):
+    return render(request,"core/sample.html")
+
+def store(request):
+    return render(request,"core/store.html")
+
+def contact(request):
+    return render(request,"core/contact.html")
+
+def blog(request):
+    return render(request,"core/blog.html")
+
+- ahora se comprueba si esta funcionando corriendo el server, lo proximo es 
+cargar los archivo estaticos para que se muestre bien la pagina
+para cargar los archivos estaticos se debe colocar encima de los link {% load static %}
+y los link hay q colocarlos de la sig forma
+<link href="{% static 'core/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+se crea un archivo base.html q contiene el contenido repetitivo
+en el contenido que sera dinamico se coloca 
+{% block content %}aqui el contenido dinamico{% endblock %}
+para las paginas que son dinamicas se coloca las sig etiquetas 
+{% extends 'core/base.html' %} = se importa la base que contiene el contenido repetitivo
+{% load static %} = para cargar los ficheros estaticos
+{% block content %} =dentro de esta equiqueta va el contenido que se ira a cargar
+{% endblock %}
+para los link en el html se coloca {% url 'home' %} donde lo que esta entre comilla es el name 
+que se encuentra en urls.py
+- para configurar los archivos multimedia se crea una carpeta llamada media en la raiz del proyecto
+en elarchivo de la raiz del proyecto settings.py se coloca
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'meida')
+- ahora se modifica el archivo urls.py del archivo raiz y queda asi 
+
+from django.contrib import admin
+from django.urls import path, include ## include se coloca para poder importar las urls del app core
+from django.conf import settings
+
+urlpatterns = [
+    # path del core
+    path('', include('core.urls')),## con esto se importa las url del app llamado core 
+    # path del admin
+    path('admin/', admin.site.urls),
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+
+- se crea un nuevo app 
+python manage.py startapp services
+- ahora se modifica el modelo o se crea el modelo del app creado
+el archivo queda de la siguiente manera 
+
+from django.db import models
+
+# Create your models here.
+
+class Service(models.Model):
+    title: models.CharField(max_length=200, verbose_name="Titulo")
+    subtitle: models.CharField(max_length=200, verbose_name="Sub-Titulo")
+    content: models.TextField(verbose_name="Contenido")
+    image: models.ImageField(verbose_name="Imagen", update_to="services")
+    created: models.DateField(auto_now_add=True, verbose_name="Fecha de creacion")
+    uploated: models.DateField(auto_now=True, verbose_name="Fecha de modificacion")
+
+class Meta:
+    verbose_name = "servicio"
+    verbose_name_plural = "servicios"
+    ordering = ['-created']
+
+def __str__(self):
+    return self.title
+
+- luego que se modifica o se crea un modelo se debe de migrar
+-- python manage.py makemigrations
+-- python manage.py migrate
+- Nota si da error al hacer la migracion verificar si esta instalado el paquete de Pillow
+python -m pip install Pillow
+- se crea un super usuario para poder usar el administrador
+python manage.py createsuperuser
+- hay q hacer que el modelo que se creo sea visible desde el administrador para ellos debemos
+modificar el archivo admin.py debe quedar asi 
+
+from django.contrib import admin
+from .models import Service
+# Register your models here.
+
+class ServiceAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+admin.site.register(Service, ServiceAdmin)
+
+- Para poner el administrador en espa;ol es LANGUAGE_CODE = 'es' en el archivo settings.py
+se modifica el fichero apps.py del app services
+
+from django.apps import AppConfig
+
+
+class ServicesConfig(AppConfig):
+    name = 'services'
+    verbose_name = 'Gestor de servicios'
+
+- se agrega al archivo settings.py .apps.ServiceConfig y el archivo queda asi 
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',
+    'services.apps.ServiceConfig',
+]
+
+- con eso tenemos a django en espa;ol
+
+- para poder desplegar info de la base de datos en el froned loprimero es
+modificar el app de donde se quiere desplegar el modelo el archivo
+views.py
+- importante: agregar en file/preferences/setting/ buscar python.linting.pylintArgs y agregar 
+--load-plugins=pylint_django
+- para desplegar la info es con 
+{% for service in services %}
+aqui va el contenido a desplegar
+	{{service.subtitle}}
+	{{service.image.url}} // para las imagenes
+{% endfor %}
+- admin.py se puede personalizar el admin completamente, de ejeplpo esta el admin.py del app blog
+
+
+
+
+
+
+
+
+
